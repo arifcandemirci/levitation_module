@@ -1,0 +1,695 @@
+<?xml version="1.0" ?>
+
+<robot name="robot">
+
+    <material name="white">
+        <color rgba="1 1 1 1"/>
+    </material>
+
+    <material name="black">
+        <color rgba="0 0 0 1"/>
+    </material>
+    
+    <material name="dark_gray">
+        <color rgba="0.333 0.333 0.333 1"/>
+    </material>
+
+    <material name="light_gray">
+        <color rgba="0.666 0.666 0.666 1"/>
+    </material>
+
+    <material name="brown">
+        <color rgba="0.647 0.165 0.165 1"/>
+    </material>
+
+    <material name="green">
+        <color rgba="0.1 0.8 0.1 1"/>
+    </material>
+
+    <material name="blue">
+        <color rgba="0.0 0.0 1.0 1.0"/>
+    </material>
+
+    <!-- Robotun Tavanı Base Olarak Alındı-->
+
+    <link name="base_link">
+        <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+        <visual>
+            <geometry>
+                <box size="0.22 0.18 0.005"/>
+            </geometry>
+            <material name="dark_gray"/>               
+        </visual>
+        <collision>
+            <geometry>
+                <box size="0.22 0.18 0.05"/>                 
+            </geometry>
+            <material name="dark_gray"/>               
+        </collision>
+        <inertial>
+            <origin xyz="0 0 0"/>
+            <mass value="0.1"/>
+            <inertia ixx="1e-3" ixy="0" ixz="0" iyy="1e-3" iyz="0" izz="1e-3"/>
+        </inertial>
+    </link>
+
+    <!--============ 1. Layer Columns ============-->
+
+    <!-- Front Right Column-->
+
+    <link name="front_right_column_1">
+        <origin xyz="0.095 0.075 -0.055" rpy="0.0 0.0 0.0"/>
+        <visual>
+            <geometry>
+                <cylinder radius="0.015" length="0.105"/>
+            </geometry>
+            <material name="light_gray"/>
+        </visual>
+        <collision>
+            <geometry>
+                <cylinder radius="0.015" length="0.105"/>
+            </geometry>
+            <material name="light_gray"/>
+        </collision>
+        <inertial>
+            <origin xyz="0 0 0"/>
+            <mass value="0.1"/>
+            <inertia ixx="1e-3" ixy="0" ixz="0" iyy="1e-3" iyz="0" izz="1e-3"/>
+        </inertial>
+    </link>
+
+    <joint name="base_front_right_column_1_joint" type="fixed">
+        <origin xyz="0.095 0.075 -0.055" rpy="0.0 0.0 0.0"/>
+        <parent link="base_link"/>
+        <child link="front_right_column_1"/>
+    </joint>
+
+    <!-- Front Left Column-->
+
+    <link name="front_left_column_1">
+        <origin xyz="0.095 -0.075 -0.055" rpy="0.0 0.0 0.0"/>
+        <visual>
+            <geometry>
+                <cylinder radius="0.015" length="0.105"/>
+            </geometry>
+            <material name="light_gray"/>
+        </visual>
+        <collision>
+            <geometry>
+                <cylinder radius="0.015" length="0.105"/>
+            </geometry>
+            <material name="light_gray"/>
+        </collision>
+        <inertial>
+            <origin xyz="0 0 0"/>
+            <mass value="0.1"/>
+            <inertia ixx="1e-3" ixy="0" ixz="0" iyy="1e-3" iyz="0" izz="1e-3"/>
+        </inertial>
+    </link>
+
+    <joint name="base_front_left_column_joint_1" type="fixed">
+        <origin xyz="0.095 -0.075 -0.055" rpy="0.0 0.0 0.0"/>
+        <parent link="base_link"/>
+        <child link="front_left_column_1"/>
+    </joint>
+
+    <!-- Back Right Column-->
+    <link name="back_right_column_1">
+        <origin xyz="-0.095 0.075 -0.055" rpy="0.0 0.0 0.0"/>
+        <visual>
+            <geometry>
+                <cylinder radius="0.015" length="0.105"/>
+            </geometry>
+            <material name="light_gray"/>
+        </visual>
+        <collision>
+            <geometry>
+                <cylinder radius="0.015" length="0.105"/>
+            </geometry>
+            <material name="light_gray"/>
+        </collision>
+        <inertial>
+            <origin xyz="0 0 0"/>
+            <mass value="0.1"/>
+            <inertia ixx="1e-3" ixy="0" ixz="0" iyy="1e-3" iyz="0" izz="1e-3"/>
+        </inertial>
+    </link>
+
+    <joint name="base_back_right_column_joint_1" type="fixed">
+        <origin xyz="-0.095 0.075 -0.055" rpy="0.0 0.0 0.0"/>
+        <parent link="base_link"/>
+        <child link="back_right_column_1"/>
+    </joint>
+
+    <!-- Back Left Column-->
+    <link name="back_left_column_1">
+        <origin xyz="-0.095 -0.075 -0.055" rpy="0.0 0.0 0.0"/>
+        <visual>
+            <geometry>
+                <cylinder radius="0.015" length="0.105"/>
+            </geometry>
+            <material name="light_gray"/>
+        </visual>
+        <collision>
+            <geometry>
+                <cylinder radius="0.015" length="0.105"/>
+            </geometry>
+            <material name="light_gray"/>
+        </collision>
+        <inertial>
+            <origin xyz="0 0 0"/>
+            <mass value="0.1"/>
+            <inertia ixx="1e-3" ixy="0" ixz="0" iyy="1e-3" iyz="0" izz="1e-3"/>
+        </inertial>
+    </link>
+
+    <joint name="base_back_left_column_joint_1" type="fixed">
+        <origin xyz="-0.095 -0.075 -0.055" rpy="0.0 0.0 0.0"/>
+        <parent link="base_link"/>
+        <child link="back_left_column_1"/>
+    </joint>
+
+    <!--============ Middle Layer ============ -->
+    <link name="middle_layer">
+        <origin xyz="0.0 0.0 -0.11" rpy="0.0 0.0 0.0"/>
+        <visual>
+            <geometry>
+                <box size="0.22 0.18 0.005"/>
+            </geometry>
+            <material name="dark_gray"/>               
+        </visual>
+        <collision>
+            <geometry>
+                <box size="0.22 0.18 0.005"/>                 
+            </geometry>
+            <material name="dark_gray"/>               
+        </collision>
+        <inertial>
+            <origin xyz="0 0 0"/>
+            <mass value="0.1"/>
+            <inertia ixx="1e-3" ixy="0" ixz="0" iyy="1e-3" iyz="0" izz="1e-3"/>
+        </inertial>
+    </link>
+
+    <joint name="base_middle_layer_joint" type="fixed">
+        <origin xyz="0.0 0.0 -0.11" rpy="0.0 0.0 0.0"/>
+        <parent link="base_link"/>
+        <child link="middle_layer"/>
+    </joint>
+
+    <!--============ 2. Layer Columns ============ -->
+
+    <!-- Front Right Column -->
+
+    <link name="front_right_column_2">
+        <origin xyz="0.095 0.075 -0.21" rpy="0.0 0.0 0.0"/>
+        <visual>
+            <geometry>
+                <cylinder radius="0.015" length="0.195"/>
+            </geometry>
+            <material name="light_gray"/>
+        </visual>
+        <collision>
+            <geometry>
+                <cylinder radius="0.015" length="0.195"/>
+            </geometry>
+            <material name="light_gray"/>
+        </collision>
+        <inertial>
+            <origin xyz="0 0 0"/>
+            <mass value="0.1"/>
+            <inertia ixx="1e-3" ixy="0" ixz="0" iyy="1e-3" iyz="0" izz="1e-3"/>
+        </inertial>
+    </link>
+
+    <joint name="base_front_right_column_joint_2" type="fixed">
+        <origin xyz="0.095 0.075 -0.21" rpy="0.0 0.0 0.0"/>
+        <parent link="base_link"/>
+        <child link="front_right_column_2"/>
+    </joint>
+
+    <!-- Front Left Column -->
+
+    <link name="front_left_column_2">
+        <origin xyz="0.095 -0.075 -0.21" rpy="0.0 0.0 0.0"/>
+        <visual>
+            <geometry>
+                <cylinder radius="0.015" length="0.195"/>
+            </geometry>
+            <material name="light_gray"/>
+        </visual>
+        <collision>
+            <geometry>
+                <cylinder radius="0.015" length="0.195"/>
+            </geometry>
+            <material name="light_gray"/>
+        </collision>
+        <inertial>
+            <origin xyz="0 0 0"/>
+            <mass value="0.1"/>
+            <inertia ixx="1e-3" ixy="0" ixz="0" iyy="1e-3" iyz="0" izz="1e-3"/>
+        </inertial>
+    </link>
+
+    <joint name="base_front_left_column_joint_2" type="fixed">
+        <origin xyz="0.095 -0.075 -0.21" rpy="0.0 0.0 0.0"/>
+        <parent link="base_link"/>
+        <child link="front_left_column_2"/>
+    </joint>
+
+    <!--Back Right Column -->
+    <link name="back_right_column_2">
+        <origin xyz="-0.095 0.075 -0.21" rpy="0.0 0.0 0.0"/>
+        <visual>
+            <geometry>
+                <cylinder radius="0.015" length="0.195"/>
+            </geometry>
+            <material name="light_gray"/>
+        </visual>
+        <collision>
+            <geometry>
+                <cylinder radius="0.015" length="0.195"/>
+            </geometry>
+            <material name="light_gray"/>
+        </collision>
+        <inertial>
+            <origin xyz="0 0 0"/>
+            <mass value="0.1"/>
+            <inertia ixx="1e-3" ixy="0" ixz="0" iyy="1e-3" iyz="0" izz="1e-3"/>
+        </inertial>
+    </link>
+
+    <joint name="base_back_right_column_joint_2" type="fixed">
+        <origin xyz="-0.095 0.075 -0.21" rpy="0.0 0.0 0.0"/>
+        <parent link="base_link"/>
+        <child link="back_right_column_2"/>
+    </joint>
+
+    <!-- Back Left Column -->
+    <link name="back_left_column_2">
+        <origin xyz="-0.095 -0.075 -0.21" rpy="0.0 0.0 0.0"/>
+        <visual>
+            <geometry>
+                <cylinder radius="0.015" length="0.195"/>
+            </geometry>
+            <material name="light_gray"/>
+        </visual>
+        <collision>
+            <geometry>
+                <cylinder radius="0.015" length="0.195"/>
+            </geometry>
+            <material name="light_gray"/>
+        </collision>
+        <inertial>
+            <origin xyz="0 0 0"/>
+            <mass value="0.1"/>
+            <inertia ixx="1e-3" ixy="0" ixz="0" iyy="1e-3" iyz="0" izz="1e-3"/>
+        </inertial>
+    </link>
+
+    <joint name="base_back_left_column_joint_2" type="fixed">
+        <origin xyz="-0.095 -0.075 -0.21" rpy="0.0 0.0 0.0"/>
+        <parent link="base_link"/>
+        <child link="back_left_column_2"/>
+    </joint>
+
+    <!--============ Lower Layer ============ -->
+    <link name="lower_layer">
+        <origin xyz="0.0 0.0 -0.31" rpy="0.0 0.0 0.0"/>
+        <visual>
+            <geometry>
+                <box size="0.22 0.18 0.005"/>
+            </geometry>
+            <material name="dark_gray"/>               
+        </visual>
+        <collision>
+            <geometry>
+                <box size="0.22 0.18 0.005"/>                 
+            </geometry>
+            <material name="dark_gray"/>               
+        </collision>
+        <inertial>
+            <origin xyz="0 0 0"/>
+            <mass value="0.1"/>
+            <inertia ixx="1e-3" ixy="0" ixz="0" iyy="1e-3" iyz="0" izz="1e-3"/>
+        </inertial>
+    </link>
+
+    <joint name="base_lower_layer_joint" type="fixed">
+        <origin xyz="0.0 0.0 -0.31" rpy="0.0 0.0 0.0"/>
+        <parent link="base_link"/>
+        <child link="lower_layer"/>
+    </joint>  
+
+    <!--============ Holder Cross Link ============ -->
+    <link name="cross_link">
+    
+        <!-- Horizontal Bar (x axis)-->
+        <visual>
+            <geometry>
+                <box size="0.175 0.03 0.02"/>
+            </geometry>
+            <origin xyz="0 0 0.005" rpy="0 0 0"/>
+            <material name="black"/>
+        </visual>
+
+        <!-- Vertical Bar (y axis) -->
+        <visual>
+            <geometry>
+                <box size="0.03 0.175 0.02"/>
+            </geometry>
+            <origin xyz="0 0 0.005" rpy="0 0 0"/>
+            <material name="black"/>
+        </visual>
+
+        <!-- Shared Collision -->
+        <collision>
+            <geometry>
+                <box size="0.175 0.175 0.02"/> 
+            </geometry>
+            <origin xyz="0 0 0.005"/>
+        </collision>
+        <inertial>
+            <origin xyz="0 0 0"/>
+            <mass value="0.1"/>
+            <inertia ixx="1e-3" ixy="0" ixz="0" iyy="1e-3" iyz="0" izz="1e-3"/>
+        </inertial>
+    </link>
+
+    <joint name="base_cross_link_joint" type="fixed">
+        <origin xyz="0.0 0.0  0.005" rpy="0.0 0.0 0.0"/>
+        <parent link="base_link"/>
+        <child link="cross_link"/>
+    </joint>  
+
+    <!--============ Coils ============ -->
+
+    <!-- Right Coil -->
+    <link name="right_coil">
+        <visual>
+            <geometry>
+                <box size="0.045 0.045 0.025"/>
+            </geometry>
+            <material name="brown"/>
+        </visual>
+        <collision>
+            <geometry>
+                <box size="0.045 0.045 0.025"/>
+            </geometry>
+            <material name="brown"/>
+        </collision>
+        <inertial>
+            <origin xyz="0 0 0"/>
+            <mass value="0.1"/>
+            <inertia ixx="1e-3" ixy="0" ixz="0" iyy="1e-3" iyz="0" izz="1e-3"/>
+        </inertial>
+    </link>
+
+    <joint name="base_right_coil_joint" type="fixed">
+        <origin xyz="0.0 -0.065 0.0325" rpy="0.0 0.0 0.0"/>
+        <parent link="base_link"/>
+        <child link="right_coil"/>
+    </joint>
+
+    <!-- Left Coil -->
+    <link name="left_coil">
+        <visual>
+            <geometry>
+                <box size="0.045 0.045 0.025"/>
+            </geometry>
+            <material name="brown"/>
+        </visual>
+        <collision>
+            <geometry>
+                <box size="0.045 0.045 0.025"/>
+            </geometry>
+            <material name="brown"/>
+        </collision>
+        <inertial>
+            <origin xyz="0 0 0"/>
+            <mass value="0.1"/>
+            <inertia ixx="1e-3" ixy="0" ixz="0" iyy="1e-3" iyz="0" izz="1e-3"/>
+        </inertial>
+    </link>
+
+    <joint name="base_left_coil_joint" type="fixed">
+        <origin xyz="0.0 0.065 0.0325" rpy="0.0 0.0 0.0"/>
+        <parent link="base_link"/>
+        <child link="left_coil"/>
+    </joint>
+
+    <!-- Front Coil -->
+    <link name="front_coil">
+        <visual>
+            <geometry>
+                <box size="0.045 0.045 0.025"/>
+            </geometry>
+            <material name="brown"/>
+        </visual>
+        <collision>
+            <geometry>
+                <box size="0.045 0.045 0.025"/>
+            </geometry>
+            <material name="brown"/>
+        </collision>
+        <inertial>
+            <origin xyz="0 0 0"/>
+            <mass value="0.1"/>
+            <inertia ixx="1e-3" ixy="0" ixz="0" iyy="1e-3" iyz="0" izz="1e-3"/>
+        </inertial>
+    </link>
+
+    <joint name="base_front_coil_joint" type="fixed">
+        <origin xyz="0.065 0.0 0.0325" rpy="0.0 0.0 0.0"/>
+        <parent link="base_link"/>
+        <child link="front_coil"/>
+    </joint>
+
+    <!-- Back Coil -->
+    <link name="back_coil">
+        <visual>
+            <geometry>
+                <box size="0.045 0.045 0.025"/>
+            </geometry>
+            <material name="brown"/>
+        </visual>
+        <collision>
+            <geometry>
+                <box size="0.045 0.045 0.025"/>
+            </geometry>
+            <material name="brown"/>
+        </collision>
+        <inertial>
+            <origin xyz="0 0 0"/>
+            <mass value="0.1"/>
+            <inertia ixx="1e-3" ixy="0" ixz="0" iyy="1e-3" iyz="0" izz="1e-3"/>
+        </inertial>
+    </link>
+
+    <joint name="base_back_coil_joint" type="fixed">
+        <origin xyz="-0.065 0.0 0.0325" rpy="0.0 0.0 0.0"/>
+        <parent link="base_link"/>
+        <child link="back_coil"/>
+    </joint>
+
+    <!-- ======== Camera ======== -->
+    <!--camera_link kameranın fiziksel gövdesini, 
+    camera_optical_link ise görüntü işleme paketlerinin 
+    kullandığı standart optik koordinat eksenlerini temsil eder. -->
+    <link name="camera_link">
+        <origin xyz="0.11 0.0 -0.11" rpy="0.0 0.0 0.0"/>
+        <visual>
+            <geometry>
+                <box size="0.01 0.03 0.03"/>
+            </geometry>
+            <material name="gray"/>
+        </visual>
+        <collision>
+            <geometry>
+                <box size="0.01 0.03 0.03"/>
+            </geometry>
+            <material name="black"/>
+        </collision>
+        <inertial>
+            <origin xyz="0 0 0"/>
+            <mass value="0.105"/>
+            <inertia ixx="1e-3" ixy="0" ixz="0" iyy="1e-3" iyz="0" izz="1e-3"/>
+        </inertial>
+    </link>
+
+    <joint name="camera_joint" type="fixed">
+        <origin xyz="0.11 0.0 -0.11" rpy="0.0 0.0 0.0"/>
+        <parent link="base_link"/>
+        <child link="camera_link"/>
+    </joint>
+
+    <link name="camera_optical_link">
+        <inertial>
+            <origin xyz="0 0 0"/>
+            <mass value="0.1"/>
+            <inertia ixx="1e-3" ixy="0" ixz="0" iyy="1e-3" iyz="0" izz="1e-3"/>
+        </inertial>
+    </link>
+
+    <joint name="camera_optical_joint" type="fixed">
+        <origin xyz="0.0 0.0 0.0" rpy="-1.5708 0.0 -1.5708"/>
+        <parent link="camera_link"/>
+        <child link="camera_optical_link"/>
+    </joint>
+
+
+    <gazebo reference="camera_link">
+        <material>Gazebo/Red</material>
+        <sensor type="camera" name="camera">
+            <always_on>1</always_on> 
+            <visualize>true</visualize>
+            <update_rate>10.0</update_rate>
+            <camera>
+                <horizontal_fov>1.047</horizontal_fov> <!-- 60 degrees in radians -->
+                <image>
+                    <width>640</width>
+                    <height>480</height>
+                    <format>R8G8B8</format> <!-- RGB format is 8 bits per channel -->
+                </image>
+                <clip>
+                    <near>0.1</near>
+                    <far>10.0</far>
+                </clip>
+            </camera>
+            <plugin name="camera_controller" filename="libgazebo_ros_camera.so">
+                <robotNamespace>/levitation_robot</robotNamespace>
+                <cameraName>levitation_camera</cameraName>
+                <imageTopicName>image_raw</imageTopicName>
+                <infoTopicName>camera_info</infoTopicName>
+                <frameName>camera_optical_link</frameName> <!-- Gazebo uses the optical link as the frame -->
+            </plugin>
+        </sensor>
+    </gazebo>
+    <!-- ======== IMU ======== -->
+    <link name="imu_link">
+        <origin xyz="0.0 0.0 -0.105" rpy="0.0 0.0 0.0"/>
+        <visual>
+            <geometry>
+                <box size="0.03 0.03 0.01"/>
+            </geometry>
+            <material name="blue"/>
+        </visual>
+        <collision>
+            <geometry>
+                <box size="0.03 0.03 0.01"/>
+            </geometry>
+            <material name="blue"/>
+        </collision>
+        <inertial>
+            <origin xyz="0 0 0"/>
+            <mass value="0.105"/>
+            <inertia ixx="1e-3" ixy="0" ixz="0" iyy="1e-3" iyz="0" izz="1e-3"/>
+        </inertial>
+    </link>
+
+    <joint name="imu_joint" type="fixed">
+        <origin xyz="0.0 0.0 -0.105" rpy="0.0 0.0 0.0"/>
+        <parent link="base_link"/>
+        <child link="imu_link"/>
+    </joint>
+
+    <gazebo reference="imu_link">
+        <material>Gazebo/Blue</material>
+        <sensor type="imu" name="imu">
+            <gravity>true</gravity>
+            <always_on>true</always_on>
+            <updateRateHZ>100.0</updateRateHZ>
+            <visualize>true</visualize>
+            <topic>/imu/data</topic>
+            <plugin name="imu_plugin" filename="libgazebo_ros_imu_sensor.so">
+                <topicName>/imu</topicName>
+                <bodyName>imu_link</bodyName>    
+                <frameName>imu</frameName>  
+
+                <angular_velocity>
+                    <x>
+                        <noise type="gaussian">
+                        <mean>0.0</mean>
+                        <stddev>0.005</stddev>            <!-- 0.005 rad/s noise -->
+                        <bias_mean>0.01</bias_mean>       <!-- 0.01 rad/s sabit bias -->
+                        <bias_stddev>0.0005</bias_stddev> <!-- bias drift -->
+                        </noise>
+                    </x>
+
+                    <y>
+                        <noise type="gaussian">
+                        <mean>0.0</mean>
+                        <stddev>0.005</stddev>
+                        <bias_mean>0.01</bias_mean>
+                        <bias_stddev>0.0005</bias_stddev>
+                        </noise>
+                    </y>
+
+                    <z>
+                        <noise type="gaussian">
+                        <mean>0.0</mean>
+                        <stddev>0.005</stddev>
+                        <bias_mean>0.01</bias_mean>
+                        <bias_stddev>0.0005</bias_stddev>
+                        </noise>
+                    </z>
+                </angular_velocity>
+
+                <linear_acceleration>
+                    <x>
+                        <noise type="gaussian">
+                        <mean>0.0</mean>
+                        <stddev>0.15</stddev>             <!-- ~0.015 g -->
+                        <bias_mean>0.05</bias_mean>
+                        <bias_stddev>0.01</bias_stddev>
+                        </noise>
+                    </x>
+
+                    <y>
+                        <noise type="gaussian">
+                        <mean>0.0</mean>
+                        <stddev>0.15</stddev>
+                        <bias_mean>0.05</bias_mean>
+                        <bias_stddev>0.01</bias_stddev>
+                        </noise>
+                    </y>
+
+                    <z>
+                        <noise type="gaussian">
+                        <mean>0.0</mean>
+                        <stddev>0.15</stddev>
+                        <bias_mean>0.10</bias_mean>       <!-- gravity offset -->
+                        <bias_stddev>0.02</bias_stddev>
+                        </noise>
+                    </z>
+                </linear_acceleration>
+            </plugin>
+        </sensor>
+    </gazebo>
+
+<!-- ================= Levitation Plugin ================ -->
+<gazebo>
+    <plugin name="levitation_plugin" filename="liblevitation_plugin.so">
+        <link_name>base_link</link_name>
+        <cmd_topic>/levitation/cmd_vel</cmd_topic>
+
+        <plate_model_name>copper_plate</plate_model_name>
+        <plate_link_name>plate_link</plate_link_name>
+        <plate_thickness>0.005</plate_thickness>
+        <module_top_offset>0.0025</module_top_offset>
+        <target_gap>0.020</target_gap>
+
+        <z_kp>180.0</z_kp>
+        <z_kd>30.0</z_kd>
+        <z_force_max>120.0</z_force_max>
+
+        <planar_force_gain>8.0</planar_force_gain>
+        <planar_damping>6.0</planar_damping>
+        <planar_force_max>12.0</planar_force_max>
+
+        <rot_kp>80.0</rot_kp>
+        <rot_kd>18.0</rot_kd>
+    </plugin>
+</gazebo>
+
+</robot>

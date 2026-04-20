@@ -1,0 +1,35 @@
+# ROS/colcon/catkin workspace artifacts
+build/
+devel/
+install/
+log/
+logs/
+
+# Colcon metadata
+.colcon/
+.ros/
+
+# Generated Python files
+__pycache__/
+*.py[cod]
+
+# C/C++ build outputs
+*.o
+*.so
+*.a
+*.dylib
+*.dll
+
+# IDE/editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Local tooling
+.codex
