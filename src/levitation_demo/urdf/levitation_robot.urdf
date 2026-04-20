@@ -676,6 +676,8 @@
         <plate_model_name>copper_plate</plate_model_name>
         <plate_link_name>plate_link</plate_link_name>
         <plate_thickness>0.005</plate_thickness>
+        <plate_size_x>4.0</plate_size_x>
+        <plate_size_y>6.0</plate_size_y>
         <module_top_offset>0.0025</module_top_offset>
         <target_gap>0.020</target_gap>
 

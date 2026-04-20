@@ -50,6 +50,8 @@ public:
     this->plate_link_name_ = sdf->HasElement("plate_link_name") ? sdf->Get<std::string>("plate_link_name") : "plate_link";
 
     this->plate_thickness_ = sdf->HasElement("plate_thickness") ? sdf->Get<double>("plate_thickness") : 0.005;
+    this->plate_size_x_ = sdf->HasElement("plate_size_x") ? sdf->Get<double>("plate_size_x") : 4.0;
+    this->plate_size_y_ = sdf->HasElement("plate_size_y") ? sdf->Get<double>("plate_size_y") : 6.0;
     this->module_top_offset_ = sdf->HasElement("module_top_offset") ? sdf->Get<double>("module_top_offset") : 0.0025;
     this->target_gap_ = sdf->HasElement("target_gap") ? sdf->Get<double>("target_gap") : 0.02;
 
@@ -101,6 +103,16 @@ public:
     this->gravity_mag_ = std::abs(this->world_->Gravity().Z());
     this->locked_orientation_ = this->body_link_->WorldPose().Rot();
 
+    const ignition::math::AxisAlignedBox collision_bbox = this->body_link_->CollisionBoundingBox();
+    const double collision_top_offset = collision_bbox.Max().Z() - this->body_link_->WorldCoGPose().Pos().Z();
+    this->effective_module_top_offset_ = this->module_top_offset_;
+    if (std::isfinite(collision_top_offset) && collision_top_offset > this->effective_module_top_offset_) {
+      gzmsg << "[LevitationPlugin] module_top_offset (" << this->module_top_offset_
+            << " m) is smaller than collision top offset (" << collision_top_offset
+            << " m). Using collision-derived value to preserve planar mobility.\n";
+      this->effective_module_top_offset_ = collision_top_offset;
+    }
+
     if (!rclcpp::ok()) {
       int argc = 0;
       char ** argv = nullptr;
@@ -121,12 +133,15 @@ public:
     });
 
     this->last_update_time_ = this->world_->SimTime();
+    this->last_debug_time_ = this->last_update_time_;
     this->update_connection_ = event::Events::ConnectWorldUpdateBegin(
       std::bind(&LevitationPlugin::OnUpdate, this));
 
     gzmsg << "[LevitationPlugin] Loaded for model [" << this->model_->GetName()
           << "] total_mass=" << this->total_mass_ << " kg"
           << " target_gap=" << this->target_gap_ << " m"
+          << " plate_size=(" << this->plate_size_x_ << ", " << this->plate_size_y_ << ") m"
+          << " module_top_offset=" << this->effective_module_top_offset_ << " m"
           << " cmd_topic=" << this->cmd_topic_ << "\n";
   }
 
@@ -141,9 +156,8 @@ private:
     std::lock_guard<std::mutex> lock(this->cmd_mutex_);
     this->last_cmd_ = *msg;
 
-    std::cout << "[DEBUG] cmd_vel received: "
-          << msg->linear.x << ", "
-          << msg->linear.y << std::endl;
+    gzmsg << "[LevitationPlugin][debug] cmd_vel received x=" << msg->linear.x
+          << " y=" << msg->linear.y << "\n";
   }
 
   void OnUpdate()
@@ -163,13 +177,21 @@ private:
     const ignition::math::Vector3d linear_vel = this->body_link_->WorldLinearVel();
     const ignition::math::Vector3d angular_vel = this->body_link_->WorldAngularVel();
 
-    const double plate_center_z = this->plate_link_->WorldCoGPose().Pos().Z();
+    const ignition::math::Vector3d plate_center = this->plate_link_->WorldCoGPose().Pos();
+    const ignition::math::Vector3d robot_center = body_pose.Pos();
+    const double plate_center_z = plate_center.Z();
     const double plate_bottom_z = plate_center_z - 0.5 * this->plate_thickness_;
-    const double target_body_z = plate_bottom_z - this->target_gap_ - this->module_top_offset_;
+    const double target_body_z = plate_bottom_z - this->target_gap_ - this->effective_module_top_offset_;
+    const bool inside_plate_xy =
+      std::abs(robot_center.X() - plate_center.X()) <= 0.5 * this->plate_size_x_ &&
+      std::abs(robot_center.Y() - plate_center.Y()) <= 0.5 * this->plate_size_y_;
 
     const double z_error = target_body_z - body_pose.Pos().Z();
     double fz = this->total_mass_ * this->gravity_mag_ + this->z_kp_ * z_error - this->z_kd_ * linear_vel.Z();
     fz = Clamp(fz, 0.0, this->z_force_max_);
+    if (!inside_plate_xy) {
+      fz = 0.0;
+    }
 
     geometry_msgs::msg::Twist cmd_copy;
     {
@@ -183,7 +205,16 @@ private:
     fx = Clamp(fx, -this->planar_force_max_, this->planar_force_max_);
     fy = Clamp(fy, -this->planar_force_max_, this->planar_force_max_);
 
-    this->body_link_->AddForce(ignition::math::Vector3d(fx, fy, fz));
+    const ignition::math::Vector3d applied_force(fx, fy, fz);
+    this->body_link_->AddForce(applied_force);
+
+    if ((now - this->last_debug_time_).Double() >= 0.2) {
+      this->last_debug_time_ = now;
+      gzmsg << "[LevitationPlugin][debug] cmd_xy=(" << cmd_copy.linear.x << ", " << cmd_copy.linear.y
+            << ") planar_f=(" << fx << ", " << fy << ") plate_xy="
+            << (inside_plate_xy ? "inside" : "outside")
+            << " applied_f=" << applied_force << "\n";
+    }
 
     const ignition::math::Quaterniond q_err = this->locked_orientation_ * body_pose.Rot().Inverse();
     const ignition::math::Vector3d angle_err = q_err.Euler();
@@ -214,7 +245,10 @@ private:
   std::string plate_link_name_;
 
   double plate_thickness_{0.005};
+  double plate_size_x_{4.0};
+  double plate_size_y_{6.0};
   double module_top_offset_{0.0025};
+  double effective_module_top_offset_{0.0025};
   double target_gap_{0.02};
 
   double z_kp_{180.0};
@@ -232,6 +266,7 @@ private:
   double gravity_mag_{9.81};
   ignition::math::Quaterniond locked_orientation_;
   common::Time last_update_time_;
+  common::Time last_debug_time_;
 };
 
 GZ_REGISTER_MODEL_PLUGIN(LevitationPlugin)
