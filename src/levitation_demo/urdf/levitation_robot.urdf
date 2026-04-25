@@ -410,6 +410,9 @@
         <parent link="base_link"/>
         <child link="right_coil"/>
     </joint>
+    <gazebo reference="base_right_coil_joint">
+        <preserveFixedJoint>true</preserveFixedJoint>
+    </gazebo>
 
     <!-- Left Coil -->
     <link name="left_coil">
@@ -437,6 +440,9 @@
         <parent link="base_link"/>
         <child link="left_coil"/>
     </joint>
+    <gazebo reference="base_left_coil_joint">
+        <preserveFixedJoint>true</preserveFixedJoint>
+    </gazebo>
 
     <!-- Front Coil -->
     <link name="front_coil">
@@ -464,6 +470,9 @@
         <parent link="base_link"/>
         <child link="front_coil"/>
     </joint>
+    <gazebo reference="base_front_coil_joint">
+        <preserveFixedJoint>true</preserveFixedJoint>
+    </gazebo>
 
     <!-- Back Coil -->
     <link name="back_coil">
@@ -491,6 +500,9 @@
         <parent link="base_link"/>
         <child link="back_coil"/>
     </joint>
+    <gazebo reference="base_back_coil_joint">
+        <preserveFixedJoint>true</preserveFixedJoint>
+    </gazebo>
 
     <!-- ======== Camera ======== -->
     <!--camera_link kameranın fiziksel gövdesini, 

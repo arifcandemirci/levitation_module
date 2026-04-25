@@ -66,7 +66,7 @@ public:
     this->rot_kp_ = sdf->HasElement("rot_kp") ? sdf->Get<double>("rot_kp") : 80.0;
     this->rot_kd_ = sdf->HasElement("rot_kd") ? sdf->Get<double>("rot_kd") : 18.0;
 
-    this->body_link_ = this->model_->GetLink(this->link_name_);
+    this->body_link_ = this->ResolveModelLink(this->link_name_);
     if (!this->body_link_) {
       this->body_link_ = this->model_->GetLink();
       gzerr << "[LevitationPlugin] Could not find link [" << this->link_name_
@@ -86,6 +86,26 @@ public:
     this->plate_link_ = plate_model->GetLink(this->plate_link_name_);
     if (!this->plate_link_) {
       gzerr << "[LevitationPlugin] Could not find plate link [" << this->plate_link_name_ << "].\n";
+      return;
+    }
+
+    this->front_coil_link_ = this->ResolveModelLink("front_coil");
+    this->back_coil_link_ = this->ResolveModelLink("back_coil");
+    this->left_coil_link_ = this->ResolveModelLink("left_coil");
+    this->right_coil_link_ = this->ResolveModelLink("right_coil");
+    if (!this->front_coil_link_ || !this->back_coil_link_ || !this->left_coil_link_ || !this->right_coil_link_) {
+      gzerr << "[LevitationPlugin] Missing one or more coil links. Required: [front_coil, back_coil, left_coil, right_coil].\n";
+      const auto links = this->model_->GetLinks();
+      std::string available_links;
+      for (const auto & link : links) {
+        if (link) {
+          if (!available_links.empty()) {
+            available_links += ", ";
+          }
+          available_links += link->GetName();
+        }
+      }
+      gzerr << "[LevitationPlugin] Available links: [" << available_links << "]\n";
       return;
     }
 
@@ -146,6 +166,20 @@ public:
   }
 
 private:
+  physics::LinkPtr ResolveModelLink(const std::string & link_name) const
+  {
+    if (!this->model_) {
+      return nullptr;
+    }
+
+    auto link = this->model_->GetLink(link_name);
+    if (link) {
+      return link;
+    }
+
+    return this->model_->GetLink(this->model_->GetName() + "::" + link_name);
+  }
+
   static double Clamp(double value, double min_value, double max_value)
   {
     return std::max(min_value, std::min(value, max_value));
@@ -155,14 +189,13 @@ private:
   {
     std::lock_guard<std::mutex> lock(this->cmd_mutex_);
     this->last_cmd_ = *msg;
-
-    gzmsg << "[LevitationPlugin][debug] cmd_vel received x=" << msg->linear.x
-          << " y=" << msg->linear.y << "\n";
   }
 
   void OnUpdate()
   {
-    if (!this->body_link_ || !this->plate_link_) {
+    if (!this->body_link_ || !this->plate_link_ ||
+        !this->front_coil_link_ || !this->back_coil_link_ ||
+        !this->left_coil_link_ || !this->right_coil_link_) {
       return;
     }
 
@@ -176,22 +209,48 @@ private:
     const ignition::math::Pose3d body_pose = this->body_link_->WorldCoGPose();
     const ignition::math::Vector3d linear_vel = this->body_link_->WorldLinearVel();
     const ignition::math::Vector3d angular_vel = this->body_link_->WorldAngularVel();
+    const ignition::math::Vector3d body_center = body_pose.Pos();
 
     const ignition::math::Vector3d plate_center = this->plate_link_->WorldCoGPose().Pos();
-    const ignition::math::Vector3d robot_center = body_pose.Pos();
     const double plate_center_z = plate_center.Z();
     const double plate_bottom_z = plate_center_z - 0.5 * this->plate_thickness_;
     const double target_body_z = plate_bottom_z - this->target_gap_ - this->effective_module_top_offset_;
-    const bool inside_plate_xy =
-      std::abs(robot_center.X() - plate_center.X()) <= 0.5 * this->plate_size_x_ &&
-      std::abs(robot_center.Y() - plate_center.Y()) <= 0.5 * this->plate_size_y_;
 
     const double z_error = target_body_z - body_pose.Pos().Z();
-    double fz = this->total_mass_ * this->gravity_mag_ + this->z_kp_ * z_error - this->z_kd_ * linear_vel.Z();
-    fz = Clamp(fz, 0.0, this->z_force_max_);
-    if (!inside_plate_xy) {
-      fz = 0.0;
-    }
+    double fz_global = this->total_mass_ * this->gravity_mag_ + this->z_kp_ * z_error - this->z_kd_ * linear_vel.Z();
+    fz_global = Clamp(fz_global, 0.0, this->z_force_max_);
+    const double half_plate_x = 0.5 * this->plate_size_x_;
+    const double half_plate_y = 0.5 * this->plate_size_y_;
+
+    const ignition::math::Vector3d front_coil_pos = this->front_coil_link_->WorldCoGPose().Pos();
+    const ignition::math::Vector3d back_coil_pos = this->back_coil_link_->WorldCoGPose().Pos();
+    const ignition::math::Vector3d left_coil_pos = this->left_coil_link_->WorldCoGPose().Pos();
+    const ignition::math::Vector3d right_coil_pos = this->right_coil_link_->WorldCoGPose().Pos();
+
+    const bool front_inside = std::abs(front_coil_pos.X() - plate_center.X()) <= half_plate_x &&
+      std::abs(front_coil_pos.Y() - plate_center.Y()) <= half_plate_y;
+    const bool back_inside = std::abs(back_coil_pos.X() - plate_center.X()) <= half_plate_x &&
+      std::abs(back_coil_pos.Y() - plate_center.Y()) <= half_plate_y;
+    const bool left_inside = std::abs(left_coil_pos.X() - plate_center.X()) <= half_plate_x &&
+      std::abs(left_coil_pos.Y() - plate_center.Y()) <= half_plate_y;
+    const bool right_inside = std::abs(right_coil_pos.X() - plate_center.X()) <= half_plate_x &&
+      std::abs(right_coil_pos.Y() - plate_center.Y()) <= half_plate_y;
+
+    const double fz_front = front_inside ? 0.25 * fz_global : 0.0;
+    const double fz_back = back_inside ? 0.25 * fz_global : 0.0;
+    const double fz_left = left_inside ? 0.25 * fz_global : 0.0;
+    const double fz_right = right_inside ? 0.25 * fz_global : 0.0;
+    const double fz_total = fz_front + fz_back + fz_left + fz_right;
+
+    const ignition::math::Vector3d force_front(0.0, 0.0, fz_front);
+    const ignition::math::Vector3d force_back(0.0, 0.0, fz_back);
+    const ignition::math::Vector3d force_left(0.0, 0.0, fz_left);
+    const ignition::math::Vector3d force_right(0.0, 0.0, fz_right);
+    const ignition::math::Vector3d tau_total =
+      (front_coil_pos - body_center).Cross(force_front) +
+      (back_coil_pos - body_center).Cross(force_back) +
+      (left_coil_pos - body_center).Cross(force_left) +
+      (right_coil_pos - body_center).Cross(force_right);
 
     geometry_msgs::msg::Twist cmd_copy;
     {
@@ -205,15 +264,18 @@ private:
     fx = Clamp(fx, -this->planar_force_max_, this->planar_force_max_);
     fy = Clamp(fy, -this->planar_force_max_, this->planar_force_max_);
 
-    const ignition::math::Vector3d applied_force(fx, fy, fz);
+    const ignition::math::Vector3d applied_force(fx, fy, fz_total);
     this->body_link_->AddForce(applied_force);
 
-    if ((now - this->last_debug_time_).Double() >= 0.2) {
+    if ((now - this->last_debug_time_).Double() >= 1.0) {
       this->last_debug_time_ = now;
-      gzmsg << "[LevitationPlugin][debug] cmd_xy=(" << cmd_copy.linear.x << ", " << cmd_copy.linear.y
-            << ") planar_f=(" << fx << ", " << fy << ") plate_xy="
-            << (inside_plate_xy ? "inside" : "outside")
-            << " applied_f=" << applied_force << "\n";
+      gzmsg << "[LevitationPlugin] coils: "
+            << "F=" << (front_inside ? "IN " : "OUT ") << fz_front << "N, "
+            << "B=" << (back_inside ? "IN " : "OUT ") << fz_back << "N, "
+            << "L=" << (left_inside ? "IN " : "OUT ") << fz_left << "N, "
+            << "R=" << (right_inside ? "IN " : "OUT ") << fz_right << "N"
+            << " | F_total=" << applied_force << "N"
+            << " | Tau_total=" << tau_total << "Nm\n";
     }
 
     const ignition::math::Quaterniond q_err = this->locked_orientation_ * body_pose.Rot().Inverse();
@@ -230,6 +292,10 @@ private:
   physics::ModelPtr model_;
   physics::LinkPtr body_link_;
   physics::LinkPtr plate_link_;
+  physics::LinkPtr front_coil_link_;
+  physics::LinkPtr back_coil_link_;
+  physics::LinkPtr left_coil_link_;
+  physics::LinkPtr right_coil_link_;
   event::ConnectionPtr update_connection_;
 
   std::shared_ptr<rclcpp::Node> ros_node_;
