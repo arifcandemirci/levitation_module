@@ -26,13 +26,13 @@ def generate_launch_description():
     spawn_x_arg = DeclareLaunchArgument('spawn_x', default_value='-0.510715')
     spawn_y_arg = DeclareLaunchArgument('spawn_y', default_value='0.350583')
     spawn_z_arg = DeclareLaunchArgument('spawn_z', default_value='1.90')
-    pause_arg = DeclareLaunchArgument('pause', default_value='false')
+    pause_arg = DeclareLaunchArgument('pause', default_value='true')
 
     robot_description = (pkg_share / 'urdf' / 'levitation_robot.urdf').read_text()
 
     gazebo = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(str(gazebo_ros_share / 'launch' / 'gazebo.launch.py')),
-        launch_arguments={'world': world, 'pause': 'false'}.items(),
+        launch_arguments={'world': world, 'pause': 'true'}.items(),
     )
 
     robot_state_publisher = Node(

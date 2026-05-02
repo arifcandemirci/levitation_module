@@ -64,17 +64,114 @@
       <static>true</static>
       <pose>-0.510715 0.350583 2.0 0 0 0</pose>
       <link name='plate_link'>
-        <collision name='collision'>
+        <!--
+          Non-overlapping top-view layout:
+          - main plates are 3.0 x 12.0 and run along Y
+          - connector_left_center spans X [-9.5, -1.5]
+          - connector_center_right spans X [1.5, 7.5]
+          - connector faces touch the main plate faces without penetrating
+        -->
+        <collision name='main_plate_left'>
+          <pose>-11.0 0 0 0 0 0</pose>
           <geometry>
             <box>
-              <size>4.0 6.0 0.005</size>
+              <size>3.0 12.0 0.005</size>
             </box>
           </geometry>
         </collision>
-        <visual name='visual'>
+        <visual name='main_plate_left'>
+          <pose>-11.0 0 0 0 0 0</pose>
           <geometry>
             <box>
-              <size>4.0 6.0 0.005</size>
+              <size>3.0 12.0 0.005</size>
+            </box>
+          </geometry>
+          <material>
+            <script>
+              <name>Gazebo/Yellow</name>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+            </script>
+          </material>
+        </visual>
+        <collision name='main_plate_center'>
+          <pose>0 0 0 0 0 0</pose>
+          <geometry>
+            <box>
+              <size>3.0 12.0 0.005</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name='main_plate_center'>
+          <pose>0 0 0 0 0 0</pose>
+          <geometry>
+            <box>
+              <size>3.0 12.0 0.005</size>
+            </box>
+          </geometry>
+          <material>
+            <script>
+              <name>Gazebo/Yellow</name>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+            </script>
+          </material>
+        </visual>
+        <collision name='main_plate_right'>
+          <pose>9.0 0 0 0 0 0</pose>
+          <geometry>
+            <box>
+              <size>3.0 12.0 0.005</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name='main_plate_right'>
+          <pose>9.0 0 0 0 0 0</pose>
+          <geometry>
+            <box>
+              <size>3.0 12.0 0.005</size>
+            </box>
+          </geometry>
+          <material>
+            <script>
+              <name>Gazebo/Yellow</name>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+            </script>
+          </material>
+        </visual>
+        <collision name='connector_left_center'>
+          <pose>-5.5 0 0 0 0 0</pose>
+          <geometry>
+            <box>
+              <size>8.0 3.0 0.005</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name='connector_left_center'>
+          <pose>-5.5 0 0 0 0 0</pose>
+          <geometry>
+            <box>
+              <size>8.0 3.0 0.005</size>
+            </box>
+          </geometry>
+          <material>
+            <script>
+              <name>Gazebo/Yellow</name>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+            </script>
+          </material>
+        </visual>
+        <collision name='connector_center_right'>
+          <pose>4.5 0 0 0 0 0</pose>
+          <geometry>
+            <box>
+              <size>6.0 3.0 0.005</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name='connector_center_right'>
+          <pose>4.5 0 0 0 0 0</pose>
+          <geometry>
+            <box>
+              <size>6.0 3.0 0.005</size>
             </box>
           </geometry>
           <material>

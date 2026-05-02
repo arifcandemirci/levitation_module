@@ -554,7 +554,7 @@
         <material>Gazebo/Red</material>
         <sensor type="camera" name="camera">
             <always_on>1</always_on> 
-            <visualize>true</visualize>
+            <visualize>false</visualize>
             <update_rate>10.0</update_rate>
             <camera>
                 <horizontal_fov>1.047</horizontal_fov> <!-- 60 degrees in radians -->
@@ -696,13 +696,20 @@
         <z_kp>180.0</z_kp>
         <z_kd>30.0</z_kd>
         <z_force_max>120.0</z_force_max>
+        <coil_force_max>45.0</coil_force_max>
 
         <planar_force_gain>8.0</planar_force_gain>
         <planar_damping>6.0</planar_damping>
         <planar_force_max>12.0</planar_force_max>
 
-        <rot_kp>80.0</rot_kp>
-        <rot_kd>18.0</rot_kd>
+        <roll_force_sign>1.0</roll_force_sign>
+        <pitch_force_sign>1.0</pitch_force_sign>
+
+        <!-- Previous values: rot_kp=80.0, rot_kd=18.0 -->
+        <rot_kp>8.0</rot_kp>
+        <rot_kd>2.5</rot_kd>
+        <attitude_torque_max_xy>3.0</attitude_torque_max_xy>
+        <yaw_torque_max>1.0</yaw_torque_max>
     </plugin>
 </gazebo>
 
