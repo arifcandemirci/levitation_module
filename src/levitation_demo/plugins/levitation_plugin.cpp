@@ -9,6 +9,7 @@
 
 #include <gazebo/common/Events.hh>
 #include <gazebo/common/Plugin.hh>
+#include <gazebo/physics/Collision.hh>
 #include <gazebo/physics/Link.hh>
 #include <gazebo/physics/Model.hh>
 #include <gazebo/physics/PhysicsEngine.hh>
@@ -78,8 +79,22 @@ public:
     }
     
     auto plate_model = this->world_->ModelByName(this->plate_model_name_);
-    
+    if (!plate_model) {
+      gzerr << "[LevitationPlugin] Plate model [" << this->plate_model_name_ << "] not found.\n";
+      return;
+    }
+
     this->plate_link_ = plate_model->GetLink(this->plate_link_name_);
+    if (!this->plate_link_) {
+      gzerr << "[LevitationPlugin] Plate link [" << this->plate_link_name_
+            << "] not found in model [" << this->plate_model_name_ << "].\n";
+      return;
+    }
+
+    if (!this->BuildPlateFootprintFromCollisions()) {
+      gzerr << "[LevitationPlugin] Failed to derive plate footprint from collision geometry.\n";
+      return;
+    }
     
     this->front_coil_link_ = this->ResolveModelLink("front_coil");
     this->back_coil_link_ = this->ResolveModelLink("back_coil");
@@ -165,7 +180,8 @@ public:
     gzmsg << "[LevitationPlugin] Loaded for model [" << this->model_->GetName()
           << "] total_mass=" << this->total_mass_ << " kg"
           << " target_gap=" << this->target_gap_ << " m"
-          << " plate_footprint=5_rectangles"
+          << " plate_footprint=" << this->plate_footprint_.size() << "_collisions"
+          << " plate_thickness=" << this->effective_plate_thickness_ << " m"
           << " module_top_offset=" << this->effective_module_top_offset_ << " m"
           << " cmd_topic=" << this->cmd_topic_ << "\n";
   }
@@ -196,13 +212,73 @@ private:
       std::abs(y - cy) <= sy * 0.5;
   }
 
-  static bool PointInsideCopperPlateFootprint(double local_x, double local_y)
+  bool BuildPlateFootprintFromCollisions()
   {
-    return PointInRect(local_x, local_y, -7.0, 0.0, 3.0, 12.0) ||
-      PointInRect(local_x, local_y, 0.0, 0.0, 3.0, 12.0) ||
-      PointInRect(local_x, local_y, 6.0, 0.0, 3.0, 12.0) ||
-      PointInRect(local_x, local_y, -3.5, 0.0, 8.0, 3.0) ||
-      PointInRect(local_x, local_y, 3.0, 0.0, 6.0, 3.0);
+    this->plate_footprint_.clear();
+
+    if (!this->plate_link_) {
+      return false;
+    }
+
+    const auto collisions = this->plate_link_->GetCollisions();
+    if (collisions.empty()) {
+      return false;
+    }
+
+    const ignition::math::Pose3d plate_pose = this->plate_link_->WorldCoGPose();
+    double max_collision_thickness = 0.0;
+
+    for (const auto & collision : collisions) {
+      if (!collision) {
+        continue;
+      }
+
+      const ignition::math::Pose3d collision_pose = collision->WorldPose();
+      const ignition::math::Vector3d collision_center_local =
+        plate_pose.Rot().RotateVectorReverse(collision_pose.Pos() - plate_pose.Pos());
+      const ignition::math::AxisAlignedBox bbox = collision->BoundingBox();
+
+      PlateFootprintRect rect;
+      rect.name = collision->GetName();
+      rect.center_x = collision_center_local.X();
+      rect.center_y = collision_center_local.Y();
+      rect.size_x = bbox.XLength();
+      rect.size_y = bbox.YLength();
+
+      if (rect.size_x <= 0.0 || rect.size_y <= 0.0) {
+        continue;
+      }
+
+      max_collision_thickness = std::max(max_collision_thickness, bbox.ZLength());
+      this->plate_footprint_.push_back(rect);
+    }
+
+    if (this->plate_footprint_.empty()) {
+      return false;
+    }
+
+    if (max_collision_thickness > 0.0) {
+      this->effective_plate_thickness_ = max_collision_thickness;
+      if (std::abs(this->effective_plate_thickness_ - this->plate_thickness_) > 1e-6) {
+        gzmsg << "[LevitationPlugin] plate_thickness (" << this->plate_thickness_
+              << " m) differs from collision-derived thickness (" << this->effective_plate_thickness_
+              << " m). Using collision-derived value.\n";
+      }
+    } else {
+      this->effective_plate_thickness_ = this->plate_thickness_;
+    }
+
+    return true;
+  }
+
+  bool PointInsideCopperPlateFootprint(double local_x, double local_y) const
+  {
+    for (const auto & rect : this->plate_footprint_) {
+      if (PointInRect(local_x, local_y, rect.center_x, rect.center_y, rect.size_x, rect.size_y)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   void OnCmdVel(const geometry_msgs::msg::Twist::SharedPtr msg)
@@ -241,9 +317,10 @@ private:
     const ignition::math::Vector3d angular_vel = this->body_link_->WorldAngularVel();
     const ignition::math::Vector3d body_center = body_pose.Pos();
 
-    const ignition::math::Vector3d plate_center = this->plate_link_->WorldCoGPose().Pos();
+    const ignition::math::Pose3d plate_pose = this->plate_link_->WorldCoGPose();
+    const ignition::math::Vector3d plate_center = plate_pose.Pos();
     const double plate_center_z = plate_center.Z();
-    const double plate_bottom_z = plate_center_z - 0.5 * this->plate_thickness_;
+    const double plate_bottom_z = plate_center_z - 0.5 * this->effective_plate_thickness_;
     const double target_body_z = plate_bottom_z - this->target_gap_ - this->effective_module_top_offset_;
 
     const double z_error = target_body_z - body_pose.Pos().Z();
@@ -255,10 +332,14 @@ private:
     const ignition::math::Vector3d left_coil_pos = this->left_coil_link_->WorldCoGPose().Pos();
     const ignition::math::Vector3d right_coil_pos = this->right_coil_link_->WorldCoGPose().Pos();
 
-    const ignition::math::Vector3d front_local = front_coil_pos - plate_center;
-    const ignition::math::Vector3d back_local = back_coil_pos - plate_center;
-    const ignition::math::Vector3d left_local = left_coil_pos - plate_center;
-    const ignition::math::Vector3d right_local = right_coil_pos - plate_center;
+    const ignition::math::Vector3d front_local =
+      plate_pose.Rot().RotateVectorReverse(front_coil_pos - plate_center);
+    const ignition::math::Vector3d back_local =
+      plate_pose.Rot().RotateVectorReverse(back_coil_pos - plate_center);
+    const ignition::math::Vector3d left_local =
+      plate_pose.Rot().RotateVectorReverse(left_coil_pos - plate_center);
+    const ignition::math::Vector3d right_local =
+      plate_pose.Rot().RotateVectorReverse(right_coil_pos - plate_center);
 
     const bool front_inside = PointInsideCopperPlateFootprint(front_local.X(), front_local.Y());
     const bool back_inside = PointInsideCopperPlateFootprint(back_local.X(), back_local.Y());
@@ -416,7 +497,19 @@ private:
   std::string plate_model_name_;
   std::string plate_link_name_;
 
+  struct PlateFootprintRect
+  {
+    std::string name;
+    double center_x{0.0};
+    double center_y{0.0};
+    double size_x{0.0};
+    double size_y{0.0};
+  };
+
+  std::vector<PlateFootprintRect> plate_footprint_;
+
   double plate_thickness_{0.005};
+  double effective_plate_thickness_{0.005};
   double module_top_offset_{0.0025};
   double effective_module_top_offset_{0.0025};
   double target_gap_{0.02};

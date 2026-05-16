@@ -32,6 +32,7 @@ install(PROGRAMS
 
 install(DIRECTORY
   launch
+  media
   urdf
   worlds
   scripts

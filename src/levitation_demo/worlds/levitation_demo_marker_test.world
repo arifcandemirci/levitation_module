@@ -93,6 +93,25 @@
             </script>
           </material>
         </visual>
+    <visual name='test_apriltag_0'>
+	  <!-- Copper plate alt yüzeyinin biraz altına koyuyoruz -->
+	  <pose>0 0 -0.01 3.14159 0 0</pose>
+
+	  <geometry>
+	    <plane>
+	      <normal>0 0 1</normal>
+	      <size>0.007 0.007</size>
+	    </plane>
+	  </geometry>
+
+	  <material>
+	    <script>
+	      <uri>file://media/materials/scripts/apriltag.material</uri>
+	      <uri>file://media/materials/textures</uri>
+	      <name>AprilTag/Test0</name>
+	    </script>
+	  </material>
+	</visual>
         <collision name='main_plate_center'>
           <pose>0 0 0 0 0 0</pose>
           <geometry>

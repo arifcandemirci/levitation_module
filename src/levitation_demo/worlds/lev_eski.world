@@ -66,24 +66,24 @@
       <link name='plate_link'>
         <!--
           Non-overlapping top-view layout:
-          - main plates are 0.9 x 3.6 and run along Y
-          - connector_left_center spans X [-2.85, -0.45]
-          - connector_center_right spans X [0.45, 2.25]
+          - main plates are 3.0 x 12.0 and run along Y
+          - connector_left_center spans X [-9.5, -1.5]
+          - connector_center_right spans X [1.5, 7.5]
           - connector faces touch the main plate faces without penetrating
         -->
         <collision name='main_plate_left'>
-          <pose>-3.3 0 0 0 0 0</pose>
+          <pose>-11.0 0 0 0 0 0</pose>
           <geometry>
             <box>
-              <size>0.9 3.6 0.0015</size>
+              <size>3.0 12.0 0.005</size>
             </box>
           </geometry>
         </collision>
         <visual name='main_plate_left'>
-          <pose>-3.3 0 0 0 0 0</pose>
+          <pose>-11.0 0 0 0 0 0</pose>
           <geometry>
             <box>
-              <size>0.9 3.6 0.0015</size>
+              <size>3.0 12.0 0.005</size>
             </box>
           </geometry>
           <material>
@@ -97,7 +97,7 @@
           <pose>0 0 0 0 0 0</pose>
           <geometry>
             <box>
-              <size>0.9 3.6 0.0015</size>
+              <size>3.0 12.0 0.005</size>
             </box>
           </geometry>
         </collision>
@@ -105,7 +105,7 @@
           <pose>0 0 0 0 0 0</pose>
           <geometry>
             <box>
-              <size>0.9 3.6 0.0015</size>
+              <size>3.0 12.0 0.005</size>
             </box>
           </geometry>
           <material>
@@ -116,18 +116,18 @@
           </material>
         </visual>
         <collision name='main_plate_right'>
-          <pose>2.7 0 0 0 0 0</pose>
+          <pose>9.0 0 0 0 0 0</pose>
           <geometry>
             <box>
-              <size>0.9 3.6 0.0015</size>
+              <size>3.0 12.0 0.005</size>
             </box>
           </geometry>
         </collision>
         <visual name='main_plate_right'>
-          <pose>2.7 0 0 0 0 0</pose>
+          <pose>9.0 0 0 0 0 0</pose>
           <geometry>
             <box>
-              <size>0.9 3.6 0.0015</size>
+              <size>3.0 12.0 0.005</size>
             </box>
           </geometry>
           <material>
@@ -138,18 +138,18 @@
           </material>
         </visual>
         <collision name='connector_left_center'>
-          <pose>-1.65 0 0 0 0 0</pose>
+          <pose>-5.5 0 0 0 0 0</pose>
           <geometry>
             <box>
-              <size>2.4 0.9 0.0015</size>
+              <size>8.0 3.0 0.005</size>
             </box>
           </geometry>
         </collision>
         <visual name='connector_left_center'>
-          <pose>-1.65 0 0 0 0 0</pose>
+          <pose>-5.5 0 0 0 0 0</pose>
           <geometry>
             <box>
-              <size>2.4 0.9 0.0015</size>
+              <size>8.0 3.0 0.005</size>
             </box>
           </geometry>
           <material>
@@ -160,18 +160,18 @@
           </material>
         </visual>
         <collision name='connector_center_right'>
-          <pose>1.35 0 0 0 0 0</pose>
+          <pose>4.5 0 0 0 0 0</pose>
           <geometry>
             <box>
-              <size>1.8 0.9 0.0015</size>
+              <size>6.0 3.0 0.005</size>
             </box>
           </geometry>
         </collision>
         <visual name='connector_center_right'>
-          <pose>1.35 0 0 0 0 0</pose>
+          <pose>4.5 0 0 0 0 0</pose>
           <geometry>
             <box>
-              <size>1.8 0.9 0.0015</size>
+              <size>6.0 3.0 0.005</size>
             </box>
           </geometry>
           <material>

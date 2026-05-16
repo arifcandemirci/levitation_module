@@ -1,0 +1,41 @@
+material Levitation/Copper
+{
+  technique
+  {
+    pass
+    {
+      ambient 0.55 0.22 0.12 1
+      diffuse 0.70 0.32 0.18 1
+      specular 0.35 0.18 0.10 1 24
+      emissive 0.0 0.0 0.0 1
+    }
+  }
+}
+
+material Levitation/DarkGrey
+{
+  technique
+  {
+    pass
+    {
+      ambient 0.25 0.25 0.25 1
+      diffuse 0.28 0.28 0.28 1
+      specular 0.15 0.15 0.15 1 8
+      emissive 0.0 0.0 0.0 1
+    }
+  }
+}
+
+material Levitation/Black
+{
+  technique
+  {
+    pass
+    {
+      ambient 0.05 0.05 0.05 1
+      diffuse 0.08 0.08 0.08 1
+      specular 0.02 0.02 0.02 1 4
+      emissive 0.0 0.0 0.0 1
+    }
+  }
+}
