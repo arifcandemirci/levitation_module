@@ -17,7 +17,9 @@ class TagLocalizationNode(Node):
         super().__init__('tag_localization_node')
 
         self.declare_parameter('image_topic', '/camera/image_raw')
-        self.declare_parameter('marker_size', 0.012)
+        self.declare_parameter('marker_size', 0.007)
+        self.declare_parameter('marker_gap', 0.003)
+        self.declare_parameter('marker_pitch', 0.010)
         self.declare_parameter('image_width', 1280)
         self.declare_parameter('image_height', 720)
         self.declare_parameter('horizontal_fov', 1.047)
@@ -27,6 +29,11 @@ class TagLocalizationNode(Node):
         self.declare_parameter('marker_frame', 'marker_0')
         self.declare_parameter('estimated_camera_frame', 'estimated_camera_link')
         self.declare_parameter('estimated_base_frame', 'estimated_base_link')
+        self.declare_parameter('use_grid_layout', True)
+        self.declare_parameter('grid_origin_x', -0.510715)
+        self.declare_parameter('grid_origin_y', 0.350583)
+        self.declare_parameter('grid_origin_z', 1.99)
+        self.declare_parameter('grid_cols', 100)
         self.declare_parameter('marker_map_x', -0.510715)
         self.declare_parameter('marker_map_y', 0.350583)
         self.declare_parameter('marker_map_z', 1.99)
@@ -43,6 +50,8 @@ class TagLocalizationNode(Node):
 
         self.image_topic = self.get_parameter('image_topic').value
         self.marker_size = float(self.get_parameter('marker_size').value)
+        self.marker_gap = float(self.get_parameter('marker_gap').value)
+        self.marker_pitch = float(self.get_parameter('marker_pitch').value)
         self.image_width = int(self.get_parameter('image_width').value)
         self.image_height = int(self.get_parameter('image_height').value)
         self.horizontal_fov = float(self.get_parameter('horizontal_fov').value)
@@ -52,6 +61,11 @@ class TagLocalizationNode(Node):
         self.marker_frame = self.get_parameter('marker_frame').value
         self.estimated_camera_frame = self.get_parameter('estimated_camera_frame').value
         self.estimated_base_frame = self.get_parameter('estimated_base_frame').value
+        self.use_grid_layout = bool(self.get_parameter('use_grid_layout').value)
+        self.grid_origin_x = float(self.get_parameter('grid_origin_x').value)
+        self.grid_origin_y = float(self.get_parameter('grid_origin_y').value)
+        self.grid_origin_z = float(self.get_parameter('grid_origin_z').value)
+        self.grid_cols = int(self.get_parameter('grid_cols').value)
 
         self.marker_map_x = float(self.get_parameter('marker_map_x').value)
         self.marker_map_y = float(self.get_parameter('marker_map_y').value)
@@ -104,14 +118,6 @@ class TagLocalizationNode(Node):
             self.get_logger().info('Using old OpenCV detectMarkers API.')
 
         self.frame_count = 0
-        self.marker_map_transform = self.make_transform_matrix(
-            self.rpy_to_rotation_matrix(
-                self.marker_map_roll,
-                self.marker_map_pitch,
-                self.marker_map_yaw,
-            ),
-            np.array([self.marker_map_x, self.marker_map_y, self.marker_map_z], dtype=np.float64),
-        )
         self.base_to_camera_transform = self.make_transform_matrix(
             self.quaternion_to_rotation_matrix(
                 self.base_to_camera_qx,
@@ -133,6 +139,8 @@ class TagLocalizationNode(Node):
         self.get_logger().info(f'Subscribed image topic: {self.image_topic}')
         self.get_logger().info('Using dictionary: DICT_APRILTAG_36h10')
         self.get_logger().info(f'Marker size: {self.marker_size} m')
+        self.get_logger().info(f'Marker gap: {self.marker_gap} m')
+        self.get_logger().info(f'Marker pitch: {self.marker_pitch} m')
         self.get_logger().info(f'Image size: {self.image_width} x {self.image_height}')
         self.get_logger().info(f'Horizontal FOV: {self.horizontal_fov} rad')
         self.get_logger().info(f'Camera frame: {self.camera_frame}')
@@ -248,20 +256,49 @@ class TagLocalizationNode(Node):
         msg.transform.rotation.w = qw
         self.tf_broadcaster.sendTransform(msg)
 
+    def get_marker_map_pose(self, marker_id):
+        if self.use_grid_layout:
+            safe_grid_cols = max(1, self.grid_cols)
+            row = marker_id // safe_grid_cols
+            col = marker_id % safe_grid_cols
+            x = self.grid_origin_x + col * self.marker_pitch
+            y = self.grid_origin_y + row * self.marker_pitch
+            z = self.grid_origin_z
+        else:
+            row = 0
+            col = 0
+            x = self.marker_map_x
+            y = self.marker_map_y
+            z = self.marker_map_z
+
+        return {
+            'row': row,
+            'col': col,
+            'x': x,
+            'y': y,
+            'z': z,
+            'roll': self.marker_map_roll,
+            'pitch': self.marker_map_pitch,
+            'yaw': self.marker_map_yaw,
+        }
+
     def publish_map_to_camera_tf(self, marker_id, rvec, tvec, stamp):
         if not self.publish_tf_enabled:
             return
 
-        if marker_id != 0:
-            self.get_logger().warn(
-                f'Marker ID={marker_id} detected, but map pose is only configured for marker ID=0.',
-                throttle_duration_sec=2.0,
-            )
-            return
+        marker_pose = self.get_marker_map_pose(marker_id)
+        marker_map_transform = self.make_transform_matrix(
+            self.rpy_to_rotation_matrix(
+                marker_pose['roll'],
+                marker_pose['pitch'],
+                marker_pose['yaw'],
+            ),
+            np.array([marker_pose['x'], marker_pose['y'], marker_pose['z']], dtype=np.float64),
+        )
 
         rotation_camera_marker, _ = cv2.Rodrigues(rvec.reshape(3, 1))
         transform_camera_marker = self.make_transform_matrix(rotation_camera_marker, tvec)
-        transform_map_camera = self.marker_map_transform @ self.invert_transform(transform_camera_marker)
+        transform_map_camera = marker_map_transform @ self.invert_transform(transform_camera_marker)
 
         self.publish_transform(
             transform_map_camera,
@@ -277,6 +314,10 @@ class TagLocalizationNode(Node):
             stamp,
         )
 
+        self.get_logger().info(
+            f'marker_id={marker_id} row={marker_pose["row"]} col={marker_pose["col"]} '
+            f'marker_map_pose=[{marker_pose["x"]:.4f}, {marker_pose["y"]:.4f}, {marker_pose["z"]:.4f}]'
+        )
         self.get_logger().info(
             'map -> camera: '
             f'x={transform_map_camera[0, 3]:.4f}, '
